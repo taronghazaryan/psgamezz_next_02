@@ -6,6 +6,8 @@ import BasketItem from "../components/BasketItem";
 import Api from "../connectors";
 import { Trash2, X } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+
 
 const BasketPageClient = () => {
   const { basket, removeSelected, removeFromBasket, toggleAll } = useBasket();
@@ -155,12 +157,12 @@ const BasketPageClient = () => {
             <div className="text-center py-20">
               <div className="premium-card rounded-3xl p-12 max-w-md mx-auto border border-white/10">
                 <p className="text-white/60 text-xl mb-4">Корзина пуста</p>
-                <a
+                <Link
                   href="/games"
-                  className="bg-[#6366f1] hover:bg-[#5555e0] text-white inline-block px-8 py-4 rounded-xl text-lg font-bold transition-all duration-200 hover:scale-105 shadow-lg"
+                  className="bg-[#6366f1] hover:bg-[#5555e0] text-white px-8 py-4 rounded-2xl text-lg md:text-xl font-bold w-full transition-all duration-200 hover:scale-105"
                 >
-                  Перейти к играм
-                </a>
+                  Смотреть игры
+                </Link>
               </div>
             </div>
           )}
