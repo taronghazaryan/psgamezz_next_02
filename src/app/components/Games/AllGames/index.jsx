@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
 import Card from "../Card";
 import { fetchGamesPage } from "../../../api/games";
@@ -18,16 +18,14 @@ const getDefaultFilters = () => ({
 export default function AllGames() {
   const [isSelectOpen, setIsSelectOpen] = useState(false);
   const [selectedType, setSelectedType] = useState("Популярные");
-  const [filteredProducts, setFilteredProducts] = useState([]);
   const [filters, setFilters] = useState(getDefaultFilters());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [games, setGames] = useState([]);
   const [nextPageUrl, setNextPageUrl] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
-  // const [mounted, setMounted] = useState(false);
-  // useEffect(() => setMounted(true), []);
-  // if (!mounted) return null; 
+
+  const loadingRef = useRef(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -52,12 +50,112 @@ export default function AllGames() {
     if (typeof window !== "undefined") {
       sessionStorage.setItem("gameFilters", JSON.stringify(filters));
     }
-    setFilteredProducts(filterProducts(games, filters));
-  }, [filters, games]);
+  }, [filters]);
+
+  const filterProducts = useCallback((productsToFilter, currentFilters) => {
+    return productsToFilter.filter((product) => {
+      const selectedPlatforms = Object.entries(currentFilters.platform)
+        .filter(([, value]) => value)
+        .map(([key]) => key.toUpperCase());
+
+      if (
+        selectedPlatforms.length &&
+        !selectedPlatforms.some((p) => product.consoles?.includes(p))
+      )
+        return false;
+
+      const selectedGenres = Object.entries(currentFilters.genre)
+        .filter(([, value]) => value)
+        .map(([key]) => key);
+
+      if (
+        selectedGenres.length &&
+        !selectedGenres.some((genre) =>
+          product.categories?.includes(genre)
+        )
+      )
+        return false;
+
+      const activationKeys = [];
+      if (currentFilters.activation.withActivation)
+        activationKeys.push("with_activation");
+      if (currentFilters.activation.withoutActivation)
+        activationKeys.push("without_activation");
+
+      if (
+        activationKeys.length &&
+        !activationKeys.some((key) => product.prices?.[key]?.length)
+      )
+        return false;
+
+      const allPrices = activationKeys.length
+        ? activationKeys.flatMap((key) => product.prices?.[key] || [])
+        : [
+            ...(product.prices?.with_activation || []),
+            ...(product.prices?.without_activation || []),
+          ];
+
+      const priceValues = allPrices
+        .map((entry) => {
+          const platform = Object.keys(entry).find(
+            (key) => key === "PS4" || key === "PS5"
+          );
+          const price = entry?.[platform];
+          const discount = entry?.sale_amount || 0;
+          return typeof price === "number" ? price - discount : null;
+        })
+        .filter((val) => typeof val === "number");
+
+      const minPrice = currentFilters.priceRange.min
+        ? parseFloat(currentFilters.priceRange.min)
+        : null;
+      const maxPrice = currentFilters.priceRange.max
+        ? parseFloat(currentFilters.priceRange.max)
+        : null;
+
+      if (
+        (minPrice !== null || maxPrice !== null) &&
+        !priceValues.some(
+          (price) =>
+            (minPrice === null || price >= minPrice) &&
+            (maxPrice === null || price <= maxPrice)
+        )
+      )
+        return false;
+
+      if (currentFilters.withDiscount) {
+        if (!allPrices.some((e) => (e.sale_amount || 0) > 0)) return false;
+      }
+
+      const hasRussianVoice = Object.values(product.voice_acting || {}).some(
+        (arr) => Array.isArray(arr) && arr.includes("ru")
+      );
+      const hasRussianSubs = Object.values(product.subtitle || {}).some(
+        (arr) => Array.isArray(arr) && arr.includes("ru")
+      );
+
+      if (currentFilters.localization.russianVoice && !hasRussianVoice)
+        return false;
+      if (
+        currentFilters.localization.russianSubtitles &&
+        !hasRussianSubs
+      )
+        return false;
+
+      return true;
+    });
+  }, []);
+
+  const filteredProducts = useMemo(() => {
+    return filterProducts(games, filters);
+  }, [games, filters, filterProducts]);
 
   const loadMoreGames = async () => {
-    if (!nextPageUrl) return;
+    if (!nextPageUrl || loadingRef.current) return;
+
+    loadingRef.current = true;
     setLoadingMore(true);
+
     try {
       const { results, next } = await fetchGamesPage(nextPageUrl);
       setGames((prev) => [...prev, ...results]);
@@ -65,6 +163,7 @@ export default function AllGames() {
     } catch (e) {
       console.error("Ошибка загрузки:", e);
     } finally {
+      loadingRef.current = false;
       setLoadingMore(false);
     }
   };
@@ -103,97 +202,12 @@ export default function AllGames() {
     setIsSelectOpen(false);
   };
 
-  const filterProducts = (productsToFilter, currentFilters) => {
-    return productsToFilter.filter((product) => {
-      const selectedPlatforms = Object.entries(currentFilters.platform)
-        .filter(([, value]) => value)
-        .map(([key]) => key.toUpperCase());
-      if (
-        selectedPlatforms.length &&
-        !selectedPlatforms.some((p) => product.consoles?.includes(p))
-      )
-        return false;
-
-      const selectedGenres = Object.entries(currentFilters.genre)
-        .filter(([, value]) => value)
-        .map(([key]) => key);
-      if (
-        selectedGenres.length &&
-        !selectedGenres.some((genre) => product.categories?.includes(genre))
-      )
-        return false;
-
-      const activationKeys = [];
-      if (currentFilters.activation.withActivation)
-        activationKeys.push("with_activation");
-      if (currentFilters.activation.withoutActivation)
-        activationKeys.push("without_activation");
-      if (
-        activationKeys.length &&
-        !activationKeys.some((key) => product.prices?.[key]?.length)
-      )
-        return false;
-
-      const allPrices = activationKeys.length
-        ? activationKeys.flatMap((key) => product.prices?.[key] || [])
-        : [
-            ...(product.prices?.with_activation || []),
-            ...(product.prices?.without_activation || []),
-          ];
-
-      const priceValues = allPrices
-        .map((entry) => {
-          const platform = Object.keys(entry).find(
-            (key) => key === "PS4" || key === "PS5"
-          );
-          const price = entry?.[platform];
-          const discount = entry?.sale_amount || 0;
-          return typeof price === "number" ? price - discount : null;
-        })
-        .filter((val) => typeof val === "number");
-
-      const minPrice = currentFilters.priceRange.min
-        ? parseFloat(currentFilters.priceRange.min)
-        : null;
-      const maxPrice = currentFilters.priceRange.max
-        ? parseFloat(currentFilters.priceRange.max)
-        : null;
-
-      const matchedPrices = priceValues.filter((price) => {
-        const aboveMin = minPrice === null || price >= minPrice;
-        const belowMax = maxPrice === null || price <= maxPrice;
-        return aboveMin && belowMax;
-      });
-      if ((minPrice !== null || maxPrice !== null) && matchedPrices.length === 0)
-        return false;
-
-      if (currentFilters.withDiscount) {
-        const hasDiscount = allPrices.some(
-          (entry) => (entry.sale_amount || 0) > 0
-        );
-        if (!hasDiscount) return false;
-      }
-
-      const hasRussianVoice = Object.values(product.voice_acting || {}).some(
-        (arr) => Array.isArray(arr) && arr.includes("ru")
-      );
-      const hasRussianSubs = Object.values(product.subtitle || {}).some(
-        (arr) => Array.isArray(arr) && arr.includes("ru")
-      );
-      if (currentFilters.localization.russianVoice && !hasRussianVoice)
-        return false;
-      if (currentFilters.localization.russianSubtitles && !hasRussianSubs)
-        return false;
-
-      return true;
-    });
-  };
-
   const activationType = filters.activation.withActivation
     ? "with_activation"
     : filters.activation.withoutActivation
     ? "without_activation"
     : "with_activation";
+
 
   return (
     <div className="w-full max-w-[1400px] mx-auto">

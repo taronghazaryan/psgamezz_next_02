@@ -1,12 +1,15 @@
 import Api from "../connectors";
 
 // 📌 Получение списка игр (с пагинацией)
+
 export const fetchGamesPage = async (url: string = "/api/games/") => {
   try {
     const res = await Api.get(url);
     return {
-      results: res.data.results || [],
-      next: res.data.next ? res.data.next.replace("http://", "https://") : null,
+      results: res.data.results ?? [],
+      next: res.data.next
+        ? res.data.next.replace("http://", "https://")
+        : null,
     };
   } catch (err) {
     console.error("Ошибка при загрузке игр:", err);

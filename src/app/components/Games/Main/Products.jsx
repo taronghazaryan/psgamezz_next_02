@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { Autoplay, Navigation, Pagination, Scrollbar } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import Card from "../Card";
@@ -21,15 +21,18 @@ function shuffleArray(array) {
 }
 
 export default function Products() {
-  const [saleProducts, setSaleProducts] = useState([]);
-  const [popularProducts, setPopularProducts] = useState([]);
-  const [newProducts, setNewProducts] = useState([]);
+  const [saleProductsRaw, setSaleProductsRaw] = useState([]);
+  const [popularRaw, setPopularRaw] = useState([]);
+  const [newRaw, setNewRaw] = useState([]);
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
-  async function loadPages(numPages = 3) {
+  const loadedRef = useRef(false);
+
+  async function loadPages(numPages = 3, startUrl) {
     let products = [];
-    let nextUrl = undefined;
+    let nextUrl = startUrl;
     for (let i = 0; i < numPages; i++) {
       const { results, next } = await fetchGamesPage(nextUrl);
       products = products.concat(results);
@@ -40,33 +43,38 @@ export default function Products() {
   }
 
   useEffect(() => {
-    async function loadData(url = "/api/games/?has_discount=true") {
+    if (loadedRef.current) return;
+    loadedRef.current = true;
+
+    async function loadData() {
       try {
+        // 🔹 SALE
         let saleCandidates = [];
-        let nextUrl = undefined;
-        for (let i = 0; i < 5 && saleCandidates.length < 25; i++) {
-          const { results, next } = await fetchGamesPage(url);
+        let nextUrl = "/api/games/?has_discount=true";
+
+        for (let i = 0; i < 5 && saleCandidates.length < 40; i++) {
+          const { results, next } = await fetchGamesPage(nextUrl);
           saleCandidates = saleCandidates.concat(results);
           if (!next) break;
           nextUrl = next;
         }
 
-        const filteredSale = saleCandidates.filter(product => {
+        const filteredSale = saleCandidates.filter((product) => {
           if (!product.prices) return false;
-          return Object.values(product.prices).some(priceList =>
-            priceList.some(priceItem => priceItem.sale_amount > 0)
+          return Object.values(product.prices).some((priceList) =>
+            priceList.some((priceItem) => priceItem.sale_amount > 0)
           );
         });
-        setSaleProducts(shuffleArray(filteredSale).slice(0, 25));
 
+        setSaleProductsRaw(filteredSale);
+
+        // 🔹 POPULAR
         const popular = await loadPages(3);
-        const popularSorted = popular
-          .sort((a, b) => (b.rate || 0) - (a.rate || 0))
-          .slice(0, 50);
-        setPopularProducts(popularSorted);
+        setPopularRaw(popular);
 
+        // 🔹 NEW
         const newGames = await loadPages(3);
-        setNewProducts(shuffleArray(newGames).slice(0, 50));
+        setNewRaw(newGames);
       } catch (e) {
         setError(e.message || "Ошибка загрузки данных");
       } finally {
@@ -77,40 +85,57 @@ export default function Products() {
     loadData();
   }, []);
 
-  if (loading) return (
-    <div className="py-12 text-center">
-      <div className="inline-block animate-pulse text-white/60 font-bold text-xl">Загрузка...</div>
-    </div>
-  );
-  if (error) return (
-    <div className="py-12 text-center">
-      <div className="text-red-400 font-bold text-xl">Ошибка: {error}</div>
-    </div>
-  );
+  // ⬇⬇⬇ ТЯЖЁЛЫЕ ОПЕРАЦИИ ТЕПЕРЬ МЕМОИЗИРОВАНЫ ⬇⬇⬇
+
+  const saleProducts = useMemo(() => {
+    return shuffleArray(saleProductsRaw).slice(0, 25);
+  }, [saleProductsRaw]);
+
+  const popularProducts = useMemo(() => {
+    return [...popularRaw]
+      .sort((a, b) => (b.rate || 0) - (a.rate || 0))
+      .slice(0, 50);
+  }, [popularRaw]);
+
+  const newProducts = useMemo(() => {
+    return shuffleArray(newRaw).slice(0, 50);
+  }, [newRaw]);
+
+  if (loading)
+    return (
+      <div className="py-12 text-center">
+        <div className="inline-block animate-pulse text-white/60 font-bold text-xl">
+          Загрузка...
+        </div>
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="py-12 text-center">
+        <div className="text-red-400 font-bold text-xl">
+          Ошибка: {error}
+        </div>
+      </div>
+    );
 
   function renderSwiper(title, productsList, prevClass, nextClass, showEmptyMessage = false) {
     return (
       <div className="w-full max-w-[1400px] mx-auto mb-16 md:mb-20">
         <div className="relative">
           <div className="flex items-center justify-between mb-8 md:mb-12 px-4 md:px-0">
-            <button 
-              className={`${prevClass} hidden md:flex w-14 h-14 rounded-xl bg-[#1e1f2e] border border-white/10 text-white hover:text-[#6366f1] flex items-center justify-center transition-all duration-200 hover:scale-110`} 
-              aria-label={`Previous Slide ${title}`}
+            <button
+              className={`${prevClass} hidden md:flex w-14 h-14 rounded-xl bg-[#1e1f2e] border border-white/10 text-white hover:text-[#6366f1] flex items-center justify-center transition-all duration-200 hover:scale-110`}
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+              ‹
             </button>
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white text-center flex-1">
               {title}
             </h2>
-            <button 
-              className={`${nextClass} hidden md:flex w-14 h-14 rounded-xl bg-[#1e1f2e] border border-white/10 text-white hover:text-[#6366f1] flex items-center justify-center transition-all duration-200 hover:scale-110`} 
-              aria-label={`Next Slide ${title}`}
+            <button
+              className={`${nextClass} hidden md:flex w-14 h-14 rounded-xl bg-[#1e1f2e] border border-white/10 text-white hover:text-[#6366f1] flex items-center justify-center transition-all duration-200 hover:scale-110`}
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              ›
             </button>
           </div>
 
@@ -119,33 +144,21 @@ export default function Products() {
             modules={[Navigation, Pagination, Autoplay, Scrollbar]}
             slidesPerView="auto"
             breakpoints={{
-              320: { 
-                slidesPerView: 1,
-                spaceBetween: 16,
-              },
-              640: { 
-                slidesPerView: 2,
-                spaceBetween: 20,
-              },
-              768: { 
-                slidesPerView: 3,
-                spaceBetween: 20,
-              },
-              1024: { 
-                slidesPerView: 4,
-                spaceBetween: 24,
-              },
-              1280: { 
-                slidesPerView: 5,
-                spaceBetween: 24,
-              },
+              320: { slidesPerView: 1, spaceBetween: 16 },
+              640: { slidesPerView: 2, spaceBetween: 20 },
+              768: { slidesPerView: 3, spaceBetween: 20 },
+              1024: { slidesPerView: 4, spaceBetween: 24 },
+              1280: { slidesPerView: 5, spaceBetween: 24 },
             }}
             navigation={{ nextEl: `.${nextClass}`, prevEl: `.${prevClass}` }}
             autoplay={{ delay: 5000, disableOnInteraction: false }}
             className="!pb-12"
           >
             {productsList.map((item, index) => (
-              <SwiperSlide key={`${item.id || item.slug || item.title}-${index}`} className="!w-auto">
+              <SwiperSlide
+                key={`${item.id || item.slug || item.title}-${index}`}
+                className="!w-auto"
+              >
                 <div className="w-[280px] md:w-[300px]">
                   <Card {...item} activationType="with_activation" />
                 </div>
@@ -154,7 +167,9 @@ export default function Products() {
           </Swiper>
 
           {showEmptyMessage && productsList.length === 0 && (
-            <p className="mt-8 text-center text-white/60 font-semibold text-lg">Пока нет распродажи</p>
+            <p className="mt-8 text-center text-white/60 font-semibold text-lg">
+              Пока нет распродажи
+            </p>
           )}
         </div>
       </div>
@@ -163,17 +178,28 @@ export default function Products() {
 
   return (
     <div className="flex flex-col gap-16 md:gap-20 lg:gap-24 py-8 md:py-12">
-      {saleProducts?.length > 0 && (
+      {saleProducts.length > 0 &&
         renderSwiper(
           "Распродажа 🚨",
           saleProducts,
           "swiper-button-prev-custom1",
           "swiper-button-next-custom1",
           true
-        )
+        )}
+
+      {renderSwiper(
+        "Популярные",
+        popularProducts,
+        "swiper-button-prev-custom2",
+        "swiper-button-next-custom2"
       )}
-      {renderSwiper("Популярные", popularProducts, "swiper-button-prev-custom2", "swiper-button-next-custom2")}
-      {renderSwiper("Новинки", newProducts, "swiper-button-prev-custom3", "swiper-button-next-custom3")}
+
+      {renderSwiper(
+        "Новинки",
+        newProducts,
+        "swiper-button-prev-custom3",
+        "swiper-button-next-custom3"
+      )}
     </div>
   );
 }
