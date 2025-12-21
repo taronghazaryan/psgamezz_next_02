@@ -24,15 +24,15 @@ export default function HowToUse() {
             {steps.map((step, index) => (
             <div
               key={index}
-              className="relative w-[280px] h-[115px] md:w-[285px] md:h-[150px] xl:w-full xl:h-[100px] max-sm:w-full border border-[rgba(32,37,98,1)] rounded-[16px] px-[16px] flex flex-col justify-center max-sm:px-3"
+              className="relative w-[280px] h-[115px] md:w-[285px] md:h-[150px] xl:w-full xl:h-[100px] max-sm:w-full border border-[rgba(255, 255, 255, 1)] rounded-[16px] px-[16px] flex flex-col justify-center max-sm:px-3"
             >
               {/* Текст шага с отступом справа под номер */}
-              <p className="xl:text-xl font-[600] leading-[1.2] tracking-[-0.02em] text-[rgba(32,37,98,1)] max-sm:text-[13px] pr-[50px]">
+              <p className="xl:text-xl font-[600] leading-[1.2] tracking-[-0.02em] text-white/80 max-sm:text-[13px] pr-[50px]">
                 {step.text}
               </p>
 
               
-              <span className="absolute right-3 w-[40px] h-[40px] max-sm:w-[28px] max-sm:h-[28px] rounded-[5px] border border-[rgba(32,37,98,1)] flex items-center justify-center font-bold text-[#1A2C79] text-[32px] max-sm:text-[18px]">
+              <span className="absolute right-3 w-[40px] h-[40px] max-sm:w-[28px] max-sm:h-[28px] rounded-[5px] border border-[rgba(255, 255, 255, 1)] flex items-center justify-center font-bold text-[#fff] text-[32px] max-sm:text-[18px]">
                 {step.number}
               </span>
             </div>

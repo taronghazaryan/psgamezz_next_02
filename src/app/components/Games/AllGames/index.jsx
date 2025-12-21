@@ -264,7 +264,7 @@ export default function AllGames() {
               </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-6 max-sm:gap-1 max-lg:grid-cols-3 max-sm:grid-cols-3">
+            <div className="grid grid-cols-4 gap-6 max-sm:gap-2 max-lg:grid-cols-3 max-sm:grid-cols-3">
               {filteredProducts.map((product, index) => (
                 <Card
                   key={`${product.id}-${index}`}

@@ -18,11 +18,17 @@ export default function GamesPage() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`relative px-8 md:px-12 py-4 md:py-5 rounded-2xl font-bold text-base md:text-lg lg:text-xl transition-all duration-300 ${
-                  activeTab === tab
+                className={`
+                  relative 
+                  px-6 sm:px-8 md:px-12 lg:px-16 
+                  py-3 sm:py-4 md:py-5 
+                  rounded-2xl font-bold 
+                  text-sm sm:text-base md:text-lg lg:text-xl 
+                  transition-all duration-300
+                  ${activeTab === tab
                     ? "bg-[#6366f1] text-white shadow-lg scale-105"
-                    : "text-white/80 hover:text-white hover:bg-white/10"
-                }`}
+                    : "text-white/80 hover:text-white hover:bg-white/10"}
+                `}
               >
                 {tab}
               </button>

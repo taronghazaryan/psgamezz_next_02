@@ -85,7 +85,7 @@ export default function Card({ activationType, prices, ...product }) {
     >
       <div className="relative bg-[#1e1f2e] rounded-2xl lg:rounded-3xl overflow-hidden border border-white/10 hover:border-[#6366f1]/50 transition-all duration-300 h-full flex flex-col shadow-lg hover:shadow-xl">
         {/* Image section */}
-        <div className="relative aspect-[3/4] overflow-hidden bg-gray-900">
+        <div className="relative xl:aspect-[3/4] max-sm:aspect-[4/4] md:aspect-[4/4] overflow-hidden bg-gray-900">
           <Image
             src={product.main_image_url}
             alt={product.title}
@@ -127,7 +127,7 @@ export default function Card({ activationType, prices, ...product }) {
 
           {/* Title on image */}
           <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
-            <h3 className="text-white font-black text-lg md:text-xl mb-2 line-clamp-2 drop-shadow-2xl">
+            <h3 className="max-sm:text-sm text-white font-black text-lg md:text-xl mb-2 line-clamp-2 drop-shadow-2xl">
               {truncateText(normalizedTitle, 25)}
             </h3>
           </div>
@@ -136,29 +136,38 @@ export default function Card({ activationType, prices, ...product }) {
         {/* Content section */}
         <div className="p-4 md:p-5 flex flex-col flex-grow bg-[#1e1f2e]">
           {/* Rating and platforms */}
-          <div className="flex items-center gap-3 mb-4 flex-wrap">
-            <div className="flex items-center gap-1.5">
-              <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-              <span className="text-white font-bold text-sm md:text-base">5.0</span>
-            </div>
-            {product.consoles?.map((console, idx) => (
-              <span
-                key={idx}
-                className="text-xs md:text-sm font-semibold text-[#6366f1] px-2 py-1 rounded-md bg-[#6366f1]/20 border border-[#6366f1]/30"
-              >
-                {console}
-              </span>
-            ))}
-          </div>
+          <div className="flex flex-col gap-2 mb-4">
+  {/* Rating */}
+  <div className="flex items-center gap-1.5">
+    <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+    </svg>
+    <span className="text-white font-bold text-sm md:text-base">
+      5.0
+    </span>
+  </div>
+
+  {/* Consoles */}
+  <div className="flex items-center gap-2 flex-wrap">
+    {product.consoles?.slice(0, 2).map((console, idx) => (
+      <span
+        key={idx}
+        className="text-xs max-sm:text-[10px] md:text-sm font-semibold
+                   text-white px-2 py-1 rounded-md bg-black/20 border border-white/30"
+      >
+        {console}
+      </span>
+    ))}
+  </div>
+</div>
+
 
           {/* Price */}
           <div className="mt-auto pt-4 border-t border-white/10">
             {activationPriceData ? (
               <div className="flex items-baseline gap-3 flex-wrap">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl md:text-3xl font-black text-[#6366f1]">
+                  <span className="text-2xl md:text-3xl font-black text-[#fff]">
                     {activationPriceData.discountedPrice}₽
                   </span>
                   {hasDiscount && (
