@@ -103,7 +103,7 @@ export default function PlayStationPlusDesign({ subscriptions, consoleTypes }) {
       checked: false,
       console_id: sub.consoles.find(id => consoleTypes.find(c => c.id === id)?.name === ps),
       id: period.id,
-      img: "/img/controller.png",
+      img: "/img/eaplay.png",
       level: sub.level,
       period_id: period.id,
       price: Number(period.price),

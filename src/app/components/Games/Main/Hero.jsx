@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pagination } from "swiper/modules";
+import { Pagination, Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/pagination";
@@ -36,7 +36,7 @@ export default function Hero() {
   const { img, title, description, price } = games[activeHero];
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto px-4 md:px-6 lg:px-8 py-8 md:py-12 bg-[#0d0e14]">
+    <div className="w-full max-w-[1400px]  mx-auto px-4 md:px-6 lg:px-8 py-8 md:py-12 bg-[#0d0e14]">
       {/* Desktop */}
       <div className="hidden sm:grid grid-cols-4 gap-5">
         <div
@@ -77,36 +77,46 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Mobile */}
       <div className="sm:hidden">
         <Swiper
           spaceBetween={16}
-          pagination={{ dynamicBullets: true }}
-          modules={[Pagination]}
+          autoplay={{
+            delay: 3000,
+            disableOnInteraction: false,
+          }}
+          pagination={{
+            clickable: true,
+            el: ".custom-swiper-pagination", // кастомный контейнер
+          }}
+          modules={[Pagination, Autoplay]}
         >
           {games.map((item, index) => (
             <SwiperSlide
               key={index}
               onClick={() => setActiveHero(index)}
               style={{ backgroundImage: `url(${item.img})` }}
-              className="relative flex items-end px-4 py-4 h-[220px] bg-center bg-cover rounded-3xl cursor-pointer"
+              className="relative bg-center bg-cover rounded-3xl cursor-pointer aspect-square"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent rounded-3xl"></div>
-              <div className="z-10 w-full">
-                <h2 className="text-white font-bold text-lg mb-1 line-clamp-1 drop-shadow-lg">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent rounded-3xl"></div>
+              <div className="absolute bottom-4 left-4 right-4 z-10">
+                <h2 className="text-white font-bold max-sm:text-3xl text-lg mb-1 line-clamp-1 drop-shadow-lg">
                   {item.title}
                 </h2>
-                <p className="text-white/90 font-medium text-[10px] line-clamp-2 mb-2">
+                <p className="text-white/90 font-medium text-xl line-clamp-2 mb-2">
                   {item.description}
                 </p>
-                <button className="premium-button w-full py-2 rounded-lg text-xs font-black">
+                <button className="w-full py-2 rounded-lg text-xl bg-white/80 text-black font-black">
                   Купить от {item.price}₽
                 </button>
               </div>
             </SwiperSlide>
           ))}
         </Swiper>
+
+        {/* Внешняя кастомная пагинация */}
+        <div className="custom-swiper-pagination flex justify-center mt-2"></div>
       </div>
+
     </div>
   );
 }
