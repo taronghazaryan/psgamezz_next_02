@@ -84,7 +84,7 @@ export default function Card({ activationType, prices, ...product }) {
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Image */}
-        <div className="relative  w-full h-60 md:h-60 max-sm:h-50 overflow-hidden rounded-2xl">
+        <div className="relative w-full aspect-square overflow-hidden rounded-2xl">
           <Image
             src={product.main_image_url}
             alt={product.title}

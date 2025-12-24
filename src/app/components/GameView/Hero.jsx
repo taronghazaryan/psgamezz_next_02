@@ -188,7 +188,9 @@ export default function Hero({ productItem }) {
                       <>
                         <span className="text-2xl md:text-3xl font-black text-[#6366f1]">{finalPrice}₽</span>
                         <span className="line-through text-white/40 text-lg">{selectedPrice}₽</span>
-                        <span className="text-[#f59e0b] font-bold bg-[#f59e0b]/20 px-2 py-1 rounded border border-[#f59e0b]/30 text-sm">-{saleAmount}%</span>
+                        <div className="bg-red-600 text-white font-bold px-1.5 py-1 rounded-lg text-xs ">
+                          <p>-{saleAmount}%</p>
+                        </div>
                       </>
                     ) : (
                       <span className="text-2xl md:text-3xl font-black text-[#6366f1]">{selectedPrice}₽</span>

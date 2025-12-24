@@ -309,7 +309,7 @@ export default function SalesPage() {
       {/* Mobile Sidebar */}
       {isSidebarOpen && (
         <div className="fixed inset-0 z-50 flex">
-          <div className="bg-white w-80 p-4 shadow-lg h-full overflow-y-auto">
+          <div className="bg-black/90  w-80 p-4 shadow-lg h-full overflow-y-auto">
             <SideBAR
               filters={filters}
               onCheckboxChange={handleCheckboxChange}
